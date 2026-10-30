@@ -7,7 +7,7 @@ import { FleetDemo } from "@/components/site/FleetDemo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/signup")({
-  validateSearch: (s: Record<string, unknown>): { onboard?: boolean } => (s.onboard ? { onboard: true } : {}),
+  validateSearch: (s: Record<string, unknown>): { onboard?: boolean } => (s["onboard"] ? { onboard: true } : {}),
   head: () => ({
     meta: [
       { title: "Sign up free — ValveGuard" },
@@ -53,14 +53,14 @@ function Signup() {
   const { onboard } = Route.useSearch();
   const [f, setF] = useState({ name: "", email: "", company: "", pw: "" });
   const [agree, setAgree] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<"name" | "email" | "company" | "pw" | "agree", string>>>({});
   const [done, setDone] = useState(false);
   const score = passwordScore(f.pw);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const er: Record<string, string> = {};
+    const er: Partial<Record<"name" | "email" | "company" | "pw" | "agree", string>> = {};
     if (!f.name.trim()) er.name = "Enter your full name.";
     if (!emailOk(f.email)) er.email = "Enter a valid work email.";
     if (!f.company.trim()) er.company = "Enter your company.";
