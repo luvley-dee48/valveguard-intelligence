@@ -1,0 +1,5 @@
+.env
+.secret_key
+*.db
+tests
+__pycache__

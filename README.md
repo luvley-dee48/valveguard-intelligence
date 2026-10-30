@@ -1,618 +1,125 @@
-# ValveGuard Intelligence
-
-Build a premium, responsive, accessible SaaS marketing website for “ValveGuard” — an industrial maintenance intelligence platform that turns valve and equipment readings into ranked, evidence-backed investigation reports.
-
-Do not copy any existing website. Create an original, polished design inspired by modern industrial SaaS, control-room interfaces, and high-end engineering products.
-
-## Brand and product positioning
-
-Product name: ValveGuard
-
-Tagline: Investigate smarter. Maintain with evidence.
-
-ValveGuard helps industrial maintenance teams monitor dozens or hundreds of valves. When readings become unusual, technicians need to know which equipment deserves attention, what evidence supports the concern, and what to inspect first.
-
-Core promise:
-
-“Turn unusual valve readings into ranked, evidence-backed investigation reports.”
-
-Critical positioning boundary — display this clearly in the footer and in the AI section:
-
-“An unusual reading does not automatically mean a valve is failing. ValveGuard flags anomalies for human investigation; it does not certify equipment safety or independently authorize repairs.”
-
-Primary audience:
-
-- Maintenance technicians
-
-- Reliability engineers
-
-- Plant operations managers
-
-- Industrial IoT and asset-performance teams
-
-## Visual direction
-
-Create a dark, technical, premium industrial interface:
-
-- Background: deep graphite navy, near-black steel, subtle blueprint grid.
-
-- Primary accent: industrial cyan / electric teal.
-
-- Secondary accent: safety amber for warnings.
-
-- Success: measured green.
-
-- Danger: controlled red, used sparingly for critical anomalies.
-
-- Surfaces: glassmorphic cards with thin 1px borders, soft inner glow, and subtle noise texture.
-
-- Typography: use a technical geometric sans-serif such as Space Grotesk for headings and Inter or IBM Plex Sans for body text. Use JetBrains Mono or IBM Plex Mono for sensor values, IDs, timestamps, and code-like details.
-
-- Visual motif: valves, flow lines, pressure gauges, sensor pulses, pipeline schematics, and data traces.
-
-- Avoid generic purple gradients, startup clichés, cartoon illustrations, and overly playful shapes.
-
-- The site should feel credible to plant engineers: precise, calm, high-signal, and operational.
-
-## 3D hero requirement
-
-Build an interactive 3D hero using React Three Fiber and drei, with graceful fallback for low-powered devices.
-
-The 3D centerpiece should be a stylized industrial control valve connected to pipes and sensor nodes:
-
-- Metallic valve body with subtle brushed-metal material.
-
-- Slowly rotating actuator.
-
-- Animated flow particles moving through the pipe.
-
-- Sensor nodes emitting soft cyan pulses.
-
-- A few floating translucent data cards around the valve showing:
-
-  - “V-107 · Response time +68%”
-
-  - “Pressure: normal”
-
-  - “Evidence: position lag”
-
-  - “Priority: inspect soon”
-
-- On mouse move, gently parallax the valve and camera.
-
-- On scroll, subtly rotate or zoom the valve.
-
-- Include a “Reduced motion” fallback: static high-quality render with CSS-animated data cards.
-
-- The 3D scene must not block text readability or hurt mobile performance.
-
-## Navigation
-
-Sticky top navigation with blur backdrop:
-
-- ValveGuard logo
-
-- Product
-
-- How it works
-
-- Platform
-
-- AI
-
-- Pricing
-
-- FAQ
-
-- Docs
-
-- GitHub
-
-- Log in
-
-- Sign up free
-
-The logo should be an original minimal mark: a stylized valve wheel or flow-control symbol forming a shield-like shape, with a cyan data pulse passing through it. Use an inline SVG, not a stock icon.
-
-Mobile navigation must use a clean full-screen or slide-in menu.
-
-## Hero section
-
-Headline:
-
-“Know which valve needs attention first.”
-
-Subheadline:
-
-“ValveGuard turns equipment readings into ranked, evidence-backed investigation reports—so maintenance teams spend less time reviewing data and more time preventing downtime.”
-
-Primary button:
-
-“Launch ValveGuard”
-
-Secondary button:
-
-“See how it works”
-
-Below the buttons, show three compact trust indicators:
-
-- “Evidence-first anomaly triage”
-
-- “Built for human investigation”
-
-- “Powered by Gemma 4 via Gemini API”
-
-Hero right side or background:
-
-Interactive 3D valve scene described above.
-
-Also include a compact live-demo preview card titled “Fleet Overview”:
-
-- 20 simulated valves
-
-- Most marked normal
-
-- Three highlighted:
-
-  - V-107: Response time +68%, priority “Inspect soon”
-
-  - V-113: Pressure-position mismatch, priority “Urgent review”
-
-  - V-121: Flatlined vibration sensor, priority “Verify sensor”
-
-- A small animated “Run triage” button that cycles through the anomaly states.
-
-- A clear label: “Simulated demonstration data.”
-
-## Partner and technology strip
-
-Immediately below the hero, add a horizontally scrolling “Built with modern industrial AI infrastructure” strip.
-
-Use subtle grayscale placeholder logos or abstract partner marks for:
-
-- Industrial IoT
-
-- Edge telemetry
-
-- Asset performance
-
-- Cloud data platforms
-
-- Maintenance systems
-
-Do not imply partnerships with real companies unless clearly labeled as illustrative.
-
-Include one prominent, visually distinct badge:
-
-“Gemma 4 · Gemini API”
-
-The badge should animate subtly as it enters the viewport and link to a section explaining Gemma 4’s role.
-
-## Section 1 — The problem
-
-Section title:
-
-“Manual review does not scale.”
-
-Body:
-
-“Maintenance teams may monitor dozens or hundreds of valves. When readings become unusual, technicians must determine which assets deserve attention, what evidence supports the concern, and what to inspect first. Manual review takes time, while poorly explained alerts can create unnecessary inspections or cause important warning signs to be overlooked.”
-
-Show three animated problem cards:
-
-1. “Too many readings”
-
-   - Animated stream of sensor values.
-
-   - Copy: “Dozens or hundreds of valves produce continuous readings.”
-
-2. “Unexplained alerts”
-
-   - Alert icon with a question mark.
-
-   - Copy: “An alert without context creates uncertainty, not action.”
-
-3. “Unclear priorities”
-
-   - Three valves with competing warning levels.
-
-   - Copy: “Technicians need to know what to inspect first—and why.”
-
-Add a transition line:
-
-“ValveGuard replaces guesswork with ranked, evidence-backed investigation.”
-
-## Section 2 — How ValveGuard works
-
-Use a three-step animated horizontal flow, with connecting pipeline lines and moving data pulses.
-
-Step 1 — Collect readings
-
-“Connect valve telemetry, maintenance metadata, and optional inspection photos.”
-
-Step 2 — Detect unusual behaviour
-
-“Deterministic anomaly checks compare readings against baselines, thresholds, trends, and data-quality rules.”
-
-Step 3 — Generate an investigation report
-
-“Gemma 4, accessed through the Gemini API, translates verified technical findings into a clear, evidence-backed report for human review.”
-
-Visual requirement:
-
-- Show a valve sending data into an anomaly engine.
-
-- The anomaly engine highlights one valve.
-
-- The selected valve sends evidence into an AI report card.
-
-- The report card opens with fields: Evidence, Likely explanations, Recommended first action, Data gaps, Confidence.
-
-Add a prominent disclaimer beneath the flow:
-
-“ValveGuard supports investigation. It does not replace qualified maintenance, process-safety, or engineering procedures.”
-
-## Section 3 — Explore the platform
-
-Create two large interactive dashboard preview cards.
-
-### Card 1: Fleet Overview
-
-Purpose:
-
-“See the health of your valve fleet and prioritize the assets that need investigation.”
-
-Preview should include:
-
-- Fleet health summary
-
-- Valve status filters
-
-- Anomaly count
-
-- Searchable valve table
-
-- Priority badges
-
-- Mini trend sparklines
-
-- “Open Fleet Overview” button
-
-### Card 2: Valve Investigation & AI Report
-
-Purpose:
-
-“Inspect the evidence behind an anomaly and review an AI-generated investigation report.”
-
-Preview should include:
-
-- Valve ID V-107
-
-- Sensor trend chart
-
-- Anomaly timeline
-
-- Evidence summary
-
-- Likely explanations with likelihood levels
-
-- Recommended first action
-
-- Data gaps
-
-- Technician actions: Accept, Needs more data, False positive
-
-- “Open Investigation Report” button
-
-Both preview cards should use realistic but clearly simulated industrial UI. Add a small badge: “Demo data.”
-
-## Section 4 — Meet the AI
-
-Section title:
-
-“Meet Gemma 4: evidence first, action second.”
-
-Explain that Gemma 4, accessed through the Gemini API, helps ValveGuard:
-
-- Translate verified technical findings into understandable explanations.
-
-- Identify missing evidence.
-
-- Distinguish possible equipment degradation from sensor or data-quality issues.
-
-- Draft inspection questions for human review.
-
-- Recommend a cautious first investigation step.
-
-Do not claim Gemma 4 predicts failures, certifies safety, or authorizes repairs.
-
-Include an interactive before-and-after example.
-
-Input panel:
-
-“Valve V-107: response time increased 68% over 24 hours. Position deviation: 11%. Pressure and temperature normal. Vibration normal.”
-
-Output panel:
-
-“Assessment: Inspect soon. Confidence: 72%. Evidence: Rising response time with normal pressure and temperature makes actuator or positioner response degradation more plausible than a process upset. Recommended first action: Review positioner diagnostics and observe a non-intrusive partial-stroke response. Data gaps: Recent maintenance history and positioner fault codes.”
-
-Animate the output as if it is being generated, then reveal it fully.
-
-Add a technical badge:
-
-“Model: gemma-4-31b-it · Gemini API”
-
-## Section 5 — Pricing
-
-Create three pricing tiers with a monthly/annual toggle. Annual pricing should show “Save 20%.”
-
-### Starter — Free
-
-Price: $0
-
-Best for: Small teams evaluating ValveGuard.
-
-Features:
-
-- Up to 25 valves
-
-- Daily anomaly checks
-
-- Fleet Overview dashboard
-
-- 50 Gemma 4 investigation reports per month
-
-- CSV upload
-
-- Community support
-
-CTA:
-
-“Sign up free”
-
-Tag: “No credit card required”
-
-### Professional — $149 per site / month
-
-Price shown as $119 per site / month when annual is selected.
-
-Best for: Maintenance teams operating one plant or site.
-
-Everything in Starter, plus:
-
-- Up to 500 valves
-
-- Real-time anomaly monitoring
-
-- Unlimited investigation reports
-
-- Valve Investigation & AI Report workspace
-
-- Technician accept/reject feedback
-
-- Role-based access
-
-- Email support
-
-CTA:
-
-“Start Professional trial”
-
-Tag: “Most popular”
-
-### Enterprise — Custom
-
-Price: “Let’s talk”
-
-Best for: Multi-site industrial operations.
-
-Everything in Professional, plus:
-
-- Unlimited valves and sites
-
-- Private deployment options
-
-- Custom baselines and integration support
-
-- Audit trails
-
-- SSO and advanced governance
-
-- Dedicated success engineer
-
-CTA:
-
-“Contact sales”
-
-Tag: “For regulated environments”
-
-Pricing design:
-
-- Use industrial gauge-style progress indicators for valve limits.
-
-- The Professional card should be visually elevated with a cyan border and subtle animated flow line.
-
-- Add a comparison note: “All plans include evidence-first triage and human-review controls.”
-
-- Add a disclaimer: “Pricing shown for demonstration purposes.”
-
-## Section 6 — FAQ
-
-Use an accessible accordion with smooth height animation, plus icons.
-
-Questions and answers:
-
-1. Does ValveGuard predict valve failure?
-
-“No. ValveGuard identifies unusual behaviour and produces evidence-backed investigation reports. It does not certify equipment safety or independently authorize repairs.”
-
-2. What does Gemma 4 do?
-
-“Gemma 4, accessed through the Gemini API, helps translate verified technical findings into clear explanations, identify missing evidence, and draft inspection questions for human review.”
-
-3. Can ValveGuard replace our maintenance team?
-
-“No. ValveGuard is decision support. Technicians and qualified engineers remain responsible for inspection, maintenance, and safety decisions.”
-
-4. What data does ValveGuard use?
-
-“The MVP supports valve telemetry, equipment metadata, maintenance history, and optional inspection photos. Customers control what data they connect.”
-
-5. How does ValveGuard avoid unnecessary inspections?
-
-“It ranks anomalies using transparent evidence, distinguishes equipment behaviour from possible sensor or data-quality issues, and identifies missing information before recommending action.”
-
-6. Is my plant data secure?
-
-“ValveGuard is designed around least-privilege access and customer-controlled data connections. Enterprise plans can support private deployment and governance requirements.”
-
-7. Can I try it without connecting live equipment?
-
-“Yes. The demo uses simulated valve readings so you can explore Fleet Overview and the AI investigation workflow immediately.”
-
-## Section 7 — Final call to action
-
-Full-width dark section with a subtle 3D valve silhouette or animated pipeline background.
-
-Headline:
-
-“Ready to investigate smarter?”
-
-Subheadline:
-
-“Turn valve readings into clear, evidence-backed priorities for your maintenance team.”
-
-Primary button:
-
-“Launch ValveGuard”
-
-Secondary links:
-
-- View GitHub
-
-- Read documentation
-
-- Model details
-
-Footer disclaimer:
-
-“ValveGuard is a decision-support prototype. It does not certify equipment safety, predict failures with certainty, or independently authorize repairs.”
-
-## Authentication pages
-
-Create polished, separate routes:
-
-### /login
-
-- Email
-
-- Password
-
-- “Log in”
-
-- “Forgot password?”
-
-- “New to ValveGuard? Sign up free”
-
-- Optional “Continue with Google” button, visually present but non-functional in the prototype.
-
-- Left side: compact ValveGuard value panel with a mini Fleet Overview preview.
-
-- Right side: clean form card.
-
-### /signup
-
-- Full name
-
-- Work email
-
-- Company
-
-- Password
-
-- Checkbox: “I agree to the Terms and Privacy Policy.”
-
-- Button: “Create free account”
-
-- Microcopy: “Free plan includes up to 25 valves and 50 Gemma 4 investigation reports per month.”
-
-- Include password strength indicator.
-
-- After signup, show a simulated onboarding screen: “Connect demo fleet” with a button labeled “Load simulated valves.”
-
-Authentication design:
-
-- Use the same dark industrial theme.
-
-- Add subtle animated pipeline lines in the background.
-
-- Forms must have clear validation states, accessible labels, keyboard focus states, and error messages.
-
-- Do not collect or transmit real credentials in the prototype; simulate authentication client-side or with placeholder API routes.
-
-## Interaction and motion
-
-Use refined, purposeful motion:
-
-- Scroll-triggered fade-and-rise for sections.
-
-- Animated data pulses along pipeline connectors.
-
-- Number count-up for metrics.
-
-- Hover glow on dashboard cards.
-
-- Accordion animations for FAQ.
-
-- Subtle 3D parallax in the hero.
-
-- Respect prefers-reduced-motion.
-
-- Keep animations under 500ms where possible; avoid distracting loops.
-
-## Technical requirements
-
-- Build with Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion, and React Three Fiber.
-
-- Ensure full mobile responsiveness.
-
-- Use semantic HTML and accessible color contrast.
-
-- Add SEO metadata:
-
-  - Title: “ValveGuard — Evidence-backed valve maintenance intelligence”
-
-  - Description: “Turn unusual valve readings into ranked, evidence-backed investigation reports with Gemma 4 via the Gemini API.”
-
-- Include Open Graph metadata and a favicon based on the ValveGuard logo.
-
-- Use placeholder images or original SVG/CSS dashboard mockups; do not use copyrighted screenshots.
-
-- Add clear “Simulated demo data” labels wherever synthetic data appears.
-
-- Make all buttons and links functional within the prototype: navigation, login, signup, dashboard previews, pricing toggle, FAQ accordion, and external GitHub/docs placeholders.
-
-## Copy tone
-
-Professional, calm, precise, and engineering-led. Avoid hype such as “revolutionary,” “magical,” or “fully autonomous.” Emphasize evidence, prioritization, transparency, human oversight, and operational reliability.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/169dd8ae-d8b8-5cd9-9313-15936daaad88).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+# Nexora: AI Industrial Intelligence Platform
+
+A fleet-monitoring dashboard with a Python backend, a real database, login/sign-up, and
+Gemma 4 (through the Gemini API) used for one specific job: explaining sensor anomalies.
+
+- **Frontend:** plain HTML/CSS/JS in `frontend/` (no build step), served by the backend.
+- **Backend:** FastAPI + SQLAlchemy in `app/`. SQLite by default; any SQLAlchemy URL works.
+- **Auth:** sign up / log in, PBKDF2 password hashes, JWT bearer tokens. The first account is `admin`.
+
+## Verify it yourself (System check page)
+
+Log in, then open **System check** in the sidebar. Every item is live from the running server:
+
+1. **Login and accounts**: who you are, token lifetime, how passwords are stored, and a view of the `users` table (admin only, never shows hashes).
+2. **Database and seeded data**: every table created by `app/db.py` with row counts and a "View rows" button. Demo rows come from `app/seed.py`.
+3. **POST / PUT / PATCH / DELETE**: "Run live CRUD test" creates a temporary asset, reads it, replaces it, edits one field (which raises an alert by rule), deletes it, and shows each real request, status code and result.
+4. **Live API requests**: what the server actually received from the browser (tick "Changes only" to hide GETs).
+5. **Gemma 4**: exact model identifier, endpoint, the code path, a "Run live Gemma 4 test" button (shows the prompt, the raw model reply, the model name the API reports, and latency) and the `ai_calls` history.
+
+## Gemma 4 proof
+
+| Question | Answer |
+|---|---|
+| Exact model | `gemma-4-26b-a4b-it` (set in `app/config.py` / `.env` as `GEMINI_MODEL`; `gemma-4-31b-it` also works) |
+| Where it is called | `app/ai.py` `_call_gemini()` posts to `https://generativelanguage.googleapis.com/v1beta/models/<model>:generateContent` |
+| What triggers it | **Alerts > Analyze with AI** (`POST /api/alerts/{id}/analyze`) and **AI Insights > Generate insights** (`POST /api/insights/generate`) |
+| What it contributes | A structured diagnosis (probable cause, failure mode, urgency, confidence, next checks, uncertainty) for the asset, shown on the alert and turned into insight cards |
+| What the app does without it | Falls back to `rule_based()` and says so in the UI: the card reads "Rule-based diagnosis" and the call is logged with `source = rules` and the reason |
+| Human control | Output is stored as *pending review*. A person must approve or reject it. The model cannot raise alerts, change severity, create work orders or touch equipment |
+| Output safety | Strict schema validation (`Diagnosis`), shown only as escaped text, asset names sanitised before they enter the prompt, 30 calls per user per hour |
+| Evidence | The `ai_calls` table and the System check page record model, API-reported `modelVersion`, latency and errors for every call |
+| Without a key | `GEMINI_API_KEY` empty means the server prints `Gemma 4 inference: DISABLED` at startup and every AI card is labelled as rule-based. It never pretends |
+
+Using a Gemini-branded model name instead of a Gemma 4 id would make the System page show a red "Not a Gemma 4 model" chip.
+
+## Run it
+
+```bash
+bash run.sh                     # Linux / WSL / Mac: makes .venv, installs, copies .env, starts the server
+# or by hand:
+python -m venv .venv && source .venv/bin/activate    # Windows: .venv\\Scripts\\activate
+pip install -r requirements.txt
+cp .env.example .env            # Windows: copy .env.example .env ; then add GEMINI_API_KEY
+uvicorn app.main:app --reload   # open http://localhost:8000  (Python 3.10+ required)
+python -m pytest                # backend tests
 ```
+
+**Always open `http://localhost:8000` from the running server.** Double-clicking an `index.html` file shows a page with no backend, no login and no data.
+
+The database file (`nexora.db`) and 12 demo assets are created on first start.
+Set `SEED_DEMO_DATA=false` for an empty production database. Interactive API docs: `/docs`.
+
+## What the AI does, and what it does not
+
+**Task that benefits from AI.** Turning a handful of sensor numbers (vibration, temperature,
+trend, health score) into a short plain-language diagnosis: probable cause, urgency, and the
+next inspection steps. Reading across signals and wording a caveat is where a language model
+helps; picking a threshold is not.
+
+**What stays conventional (no model):** health scores, threshold alerts, de-duplication and
+auto-clearing of alerts, the 72-hour failure-risk forecast (least-squares trend + normal CDF),
+all CRUD, authentication, and which assets get diagnosed.
+
+**Why an open model.** Gemma 4 weights are open, so the same prompt can later run on the plant's
+own hardware if sensor data must not leave the site. This build uses the hosted Gemini API
+(`gemma-4-26b-a4b-it`, or `gemma-4-31b-it`); local inference is a swap of `_call_gemini` in
+`app/ai.py`.
+
+**Human control.** The model never changes severity, opens alerts, creates work orders or
+touches equipment. Each diagnosis is saved as *pending review*; a person must press
+"Approve and draft work order" or "Reject" (`POST /api/alerts/{id}/analysis/review`).
+Generated insights start as *pending* too. Model output is validated against a strict schema,
+shown only as escaped text, and capped at 30 calls per user per hour.
+
+**Failure path.** No API key, a network error, a bad reply or a schema mismatch all fall back to
+the rule-based diagnosis, clearly labelled "Rule-based diagnosis" in the UI.
+
+**Data sent to the hosted API:** asset tag, asset type and numeric readings only. No names,
+emails or notes. Read the current Gemini API terms before use: unpaid services must not receive
+sensitive, confidential or personal information, and there are age and permitted-use rules.
+Do not send real plant data on the free tier unless you have checked you are allowed to.
+
+## API (all except auth need `Authorization: Bearer <token>`)
+
+| Resource | Methods |
+|---|---|
+| `/api/auth/signup`, `/login` | POST |
+| `/api/auth/me` | GET, PATCH |
+| `/api/assets`, `/api/assets/{id}` | GET, POST, PUT (replace), PATCH (partial), DELETE (admin) |
+| `/api/assets/{id}/readings` | GET, POST (updates health, status and alerts) |
+| `/api/assets/{id}/prediction` | GET |
+| `/api/alerts`, `/api/alerts/{id}` | GET, POST, PUT, PATCH, DELETE |
+| `/api/alerts/{id}/analyze`, `/analysis/review` | POST (AI diagnosis, human decision) |
+| `/api/insights`, `/api/insights/{id}`, `/generate` | GET, POST, PATCH, DELETE |
+| `/api/workflows`, `/api/workflows/{id}`, `/run` | GET, POST, PUT, PATCH, DELETE |
+| `/api/integrations`, `/api/integrations/{id}` | GET, POST, PUT, PATCH, DELETE |
+| `/api/settings` | GET, PUT, PATCH (admin) |
+| `/api/metrics/{mtbf\|oee\|energy}` | GET, PUT (admin) |
+| `/api/overview`, `/analytics/fleet`, `/activity`, `/reports/summary`, `/ai/status` | GET |
+
+Every screen re-fetches from these endpoints after a change, so the UI always shows what is in the database.
+Try it: on **Telemetry**, send a vibration reading above the alarm. The asset's health, status, an alert, the
+activity feed and the overview KPIs all update; send a normal reading and the alert clears itself.
+
+## Deploy (PrimeCloud or any container host)
+
+```bash
+docker build -t nexora .
+docker run -p 8000:8000 -v nexora-data:/data \
+  -e SECRET_KEY=... -e GEMINI_API_KEY=... -e SEED_DEMO_DATA=false nexora
+```
+
+On a platform that injects `PORT`, the container honours it. Put it behind HTTPS, set a strong
+`SECRET_KEY`, and keep the volume mounted so the SQLite file persists. For more than one instance,
+point `DATABASE_URL` at PostgreSQL (add the driver to `requirements.txt`). I could not test against
+PrimeCloud itself, so check their current deploy steps for ports, volumes and environment variables.
+
+## Known limits (be upfront about these in a demo)
+
+- Seeded assets, alerts and insights are **demo data**. MTBF, OEE and energy are manual values
+  (Settings, admin) until connected to a plant data source.
+- Integrations are connection records only. Workflows record runs; they do not call Maximo, SAP or Slack.
+- Login throttling and the AI rate limit are in memory, so they reset on restart and are per instance.
+- Fonts and icons load from Google Fonts and cdnjs (Font Awesome), as in the original dashboard.
+- Tokens live in `localStorage`; fine for a demo, consider httpOnly cookies for production.
