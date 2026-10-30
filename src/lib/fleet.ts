@@ -19,7 +19,7 @@ function wave(seed: number, drift = 0, flat = false): number[] {
 export const FLEET: Valve[] = Array.from({ length: 20 }, (_, i) => {
   const n = 101 + i;
   const id = `V-${n}`;
-  const base: Valve = { id, area: areas[i % areas.length], status: "Normal", finding: "Within baseline", trend: wave(i) };
+  const base: Valve = { id, area: areas[i % areas.length] ?? "Process line", status: "Normal", finding: "Within baseline", trend: wave(i) };
   if (n === 107) return { ...base, status: "Inspect soon", finding: "Response time +68%", trend: wave(i, 2.2) };
   if (n === 113) return { ...base, status: "Urgent review", finding: "Pressure-position mismatch", trend: wave(i, -2.6) };
   return base;

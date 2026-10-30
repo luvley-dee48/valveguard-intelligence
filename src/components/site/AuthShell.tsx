@@ -27,7 +27,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function Field({ id, label, error, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { id: string; label: string; error?: string }) {
+export function Field({ id, label, error, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { id: string; label: string; error?: string | undefined }) {
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-sm font-medium">{label}</label>
