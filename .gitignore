@@ -1,7 +1,23 @@
+# Secrets: never commit these
 .env
+.env.local
 .secret_key
+hepsibah
+hepsibah.pub
+*.pem
+id_rsa*
+id_ed25519*
+
+# Backend
 *.db
 __pycache__/
 .pytest_cache/
 .venv/
-.venv/
+
+# Frontend
+node_modules/
+dist/
+.output/
+.nitro/
+.tanstack/
+.vite/

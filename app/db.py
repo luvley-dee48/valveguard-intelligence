@@ -1,7 +1,11 @@
-"""Database engine, session and ORM models (SQLite by default, any SQLAlchemy URL works)."""
+"""Database engine, session and ORM models (SQLite by default, any SQLAlchemy URL works).
+
+Tenancy: every user belongs to one organisation, and every valve, alert, report and log row
+carries an org_id. API queries always filter on the caller's org_id.
+"""
 from datetime import datetime, timezone
 
-from sqlalchemy import (Boolean, DateTime, Float, ForeignKey, Integer, String, Text,
+from sqlalchemy import (DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint,
                         create_engine)
 from sqlalchemy.orm import (DeclarativeBase, Mapped, mapped_column, relationship,
                             sessionmaker)
@@ -25,119 +29,126 @@ class Base(DeclarativeBase):
     pass
 
 
-class User(Base):
-    __tablename__ = "users"
+class Org(Base):
+    __tablename__ = "orgs"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(80))
-    email: Mapped[str] = mapped_column(String(160), unique=True, index=True)
-    password_hash: Mapped[str] = mapped_column(String(300))
-    role: Mapped[str] = mapped_column(String(20), default="operator")  # admin | operator
+    name: Mapped[str] = mapped_column(String(120))
+    plan: Mapped[str] = mapped_column(String(20), default="free")  # free | professional | enterprise
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
-class Asset(Base):
-    __tablename__ = "assets"
+class User(Base):
+    __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
-    tag: Mapped[str] = mapped_column(String(30), unique=True, index=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"), index=True)
     name: Mapped[str] = mapped_column(String(80))
-    type: Mapped[str] = mapped_column(String(30), index=True)
-    plant: Mapped[str] = mapped_column(String(60), default="North Plant")
-    location: Mapped[str] = mapped_column(String(80), default="")
+    email: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    password_hash: Mapped[str | None] = mapped_column(String(300), nullable=True)  # null for Google-only accounts
+    google_sub: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
+    role: Mapped[str] = mapped_column(String(20), default="admin")  # admin | operator
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    org: Mapped[Org] = relationship(lazy="joined")
+
+
+class Valve(Base):
+    __tablename__ = "valves"
+    __table_args__ = (UniqueConstraint("org_id", "tag"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"), index=True)
+    tag: Mapped[str] = mapped_column(String(30), index=True)
+    name: Mapped[str] = mapped_column(String(80))
+    type: Mapped[str] = mapped_column(String(20), default="control")  # control|globe|ball|butterfly|gate|check
+    area: Mapped[str] = mapped_column(String(60), default="")
     serial: Mapped[str] = mapped_column(String(60), default="")
-    vibration: Mapped[float] = mapped_column(Float, default=0)
-    temperature: Mapped[float] = mapped_column(Float, default=25)
-    pressure: Mapped[float | None] = mapped_column(Float, nullable=True)
-    flow_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # latest telemetry
+    position_pct: Mapped[float] = mapped_column(Float, default=0)
+    command_pct: Mapped[float] = mapped_column(Float, default=0)
+    response_ms: Mapped[float] = mapped_column(Float, default=0)
+    baseline_response_ms: Mapped[float] = mapped_column(Float, default=800)
+    pressure_bar: Mapped[float | None] = mapped_column(Float, nullable=True)
+    temperature_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    vibration_mm_s: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # derived by app/analytics.py, never by the AI
     health: Mapped[int] = mapped_column(Integer, default=100)
-    status: Mapped[str] = mapped_column(String(12), default="healthy")
+    priority: Mapped[str] = mapped_column(String(16), default="normal", index=True)
+    finding: Mapped[str] = mapped_column(String(160), default="Within baseline")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
     readings: Mapped[list["Reading"]] = relationship(cascade="all, delete-orphan")
     alerts: Mapped[list["Alert"]] = relationship(cascade="all, delete-orphan")
-    insights: Mapped[list["Insight"]] = relationship(cascade="all, delete-orphan")
+    reports: Mapped[list["Report"]] = relationship(cascade="all, delete-orphan")
 
 
 class Reading(Base):
     __tablename__ = "readings"
     id: Mapped[int] = mapped_column(primary_key=True)
-    asset_id: Mapped[int] = mapped_column(ForeignKey("assets.id"), index=True)
+    valve_id: Mapped[int] = mapped_column(ForeignKey("valves.id"), index=True)
     ts: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
-    vibration: Mapped[float] = mapped_column(Float)
-    temperature: Mapped[float] = mapped_column(Float)
-    pressure: Mapped[float | None] = mapped_column(Float, nullable=True)
-    flow_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    position_pct: Mapped[float] = mapped_column(Float)
+    command_pct: Mapped[float] = mapped_column(Float)
+    response_ms: Mapped[float] = mapped_column(Float)
+    pressure_bar: Mapped[float | None] = mapped_column(Float, nullable=True)
+    temperature_c: Mapped[float | None] = mapped_column(Float, nullable=True)
+    vibration_mm_s: Mapped[float | None] = mapped_column(Float, nullable=True)
 
 
 class Alert(Base):
     __tablename__ = "alerts"
     id: Mapped[int] = mapped_column(primary_key=True)
-    asset_id: Mapped[int | None] = mapped_column(ForeignKey("assets.id"), nullable=True, index=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"), index=True)
+    valve_id: Mapped[int | None] = mapped_column(ForeignKey("valves.id"), nullable=True, index=True)
     severity: Mapped[str] = mapped_column(String(10), index=True)  # critical|high|medium|low
     title: Mapped[str] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(14), default="open", index=True)  # open|acknowledged|resolved
     source: Mapped[str] = mapped_column(String(12), default="manual")  # rule|manual
     rule_key: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    ai_analysis: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON
-    ai_review: Mapped[str] = mapped_column(String(12), default="none")  # none|pending|approved|rejected
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
 
-class Insight(Base):
-    __tablename__ = "insights"
+class Report(Base):
+    """One AI investigation of one valve. Evidence is computed by the backend; the model
+    only interprets it. A person records the outcome in `review`."""
+    __tablename__ = "reports"
     id: Mapped[int] = mapped_column(primary_key=True)
-    asset_id: Mapped[int | None] = mapped_column(ForeignKey("assets.id"), nullable=True, index=True)
-    kind: Mapped[str] = mapped_column(String(14))  # anomaly|optimization|predictive
-    title: Mapped[str] = mapped_column(String(140))
-    body: Mapped[str] = mapped_column(Text, default="")
-    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
-    status: Mapped[str] = mapped_column(String(12), default="pending")  # pending|approved|dismissed
-    source: Mapped[str] = mapped_column(String(12), default="manual")  # gemini|rules|manual|seed
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
-
-
-class Workflow(Base):
-    __tablename__ = "workflows"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(120))
-    description: Mapped[str] = mapped_column(Text, default="")
-    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    steps: Mapped[str] = mapped_column(Text, default="[]")  # JSON list of {kind,label,detail}
-    run_count: Mapped[int] = mapped_column(Integer, default=0)
-    last_run: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"), index=True)
+    valve_id: Mapped[int] = mapped_column(ForeignKey("valves.id"), index=True)
+    created_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    evidence: Mapped[str] = mapped_column(Text)  # JSON: findings + metrics sent to the model
+    analysis: Mapped[str] = mapped_column(Text)  # JSON: validated model (or rules) output
+    source: Mapped[str] = mapped_column(String(12))  # gemini | rules
+    model: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    error: Mapped[str | None] = mapped_column(String(240), nullable=True)
+    latency_ms: Mapped[int] = mapped_column(Integer, default=0)
+    review: Mapped[str] = mapped_column(String(16), default="pending")  # pending|accepted|needs_data|false_positive
+    review_note: Mapped[str] = mapped_column(String(500), default="")
+    reviewed_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
 
 
 class Activity(Base):
     __tablename__ = "activity"
     id: Mapped[int] = mapped_column(primary_key=True)
-    kind: Mapped[str] = mapped_column(String(20))  # work_order|calibration|model|sync|asset|alert|workflow|user
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(20))  # valve|alert|report|review|user
     text: Mapped[str] = mapped_column(String(200))
     detail: Mapped[str] = mapped_column(String(200), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
-
-
-class Integration(Base):
-    __tablename__ = "integrations"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(80))
-    kind: Mapped[str] = mapped_column(String(30), default="CMMS")
-    detail: Mapped[str] = mapped_column(String(160), default="")
-    status: Mapped[str] = mapped_column(String(14), default="connected")  # connected|disconnected
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
 
 class AiCall(Base):
     """Every model call (or fallback) is logged so the AI's real contribution is auditable."""
     __tablename__ = "ai_calls"
     id: Mapped[int] = mapped_column(primary_key=True)
+    org_id: Mapped[int] = mapped_column(Integer, index=True)
     ts: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
     user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    kind: Mapped[str] = mapped_column(String(20))  # alert_analysis | insight | selftest
-    asset_tag: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    kind: Mapped[str] = mapped_column(String(20))  # report | selftest
+    valve_tag: Mapped[str | None] = mapped_column(String(30), nullable=True)
     model: Mapped[str | None] = mapped_column(String(60), nullable=True)  # null when rules answered
-    api_model_version: Mapped[str | None] = mapped_column(String(80), nullable=True)  # reported by the API
+    api_model_version: Mapped[str | None] = mapped_column(String(80), nullable=True)
     source: Mapped[str] = mapped_column(String(12))  # gemini | rules
     error: Mapped[str | None] = mapped_column(String(240), nullable=True)
     latency_ms: Mapped[int] = mapped_column(Integer, default=0)
@@ -146,16 +157,9 @@ class AiCall(Base):
 
 class Setting(Base):
     __tablename__ = "settings"
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"), primary_key=True)
     key: Mapped[str] = mapped_column(String(40), primary_key=True)
     value: Mapped[str] = mapped_column(String(200))
-
-
-class Metric(Base):
-    """Plant KPIs that need an external source (MTBF, OEE, energy). Editable until integrated."""
-    __tablename__ = "metrics"
-    key: Mapped[str] = mapped_column(String(20), primary_key=True)
-    value: Mapped[float] = mapped_column(Float)
-    delta: Mapped[float] = mapped_column(Float, default=0)
 
 
 def get_db():
