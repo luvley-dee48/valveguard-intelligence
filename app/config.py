@@ -64,7 +64,7 @@ FREE_VALVE_LIMIT = int(os.getenv("FREE_VALVE_LIMIT", "25"))
 FREE_REPORTS_PER_MONTH = int(os.getenv("FREE_REPORTS_PER_MONTH", "50"))
 
 # The React frontend runs on another origin (Vite dev server locally, Lovable in production).
-_DEFAULT_ORIGINS = "http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173"
+_DEFAULT_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173"
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", _DEFAULT_ORIGINS).split(",") if o.strip()]
 # Lovable preview and published URLs. Auth is a bearer token (not a cookie), so CORS only
 # controls which sites can call the API from a browser; it is not the security boundary.

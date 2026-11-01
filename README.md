@@ -1,125 +1,118 @@
-# Nexora: AI Industrial Intelligence Platform
+# ValveGuard — evidence-backed valve maintenance intelligence
 
-A fleet-monitoring dashboard with a Python backend, a real database, login/sign-up, and
-Gemma 4 (through the Gemini API) used for one specific job: explaining sensor anomalies.
+ValveGuard turns industrial valve telemetry into ranked, evidence-backed investigation reports.
+Deterministic rules decide what is wrong. **Gemma 4, called through the Gemini API, is what drafts the
+explanation a technician reads** — on screen, in the running product, not in a diagram.
 
-- **Frontend:** plain HTML/CSS/JS in `frontend/` (no build step), served by the backend.
-- **Backend:** FastAPI + SQLAlchemy in `app/`. SQLite by default; any SQLAlchemy URL works.
-- **Auth:** sign up / log in, PBKDF2 password hashes, JWT bearer tokens. The first account is `admin`.
+- **Product:** React 19 + TanStack Start in `src/` (Vite, port 3000)
+- **API:** FastAPI + SQLAlchemy in `app/` (port 8000). SQLite by default; any SQLAlchemy URL works.
+- **Auth:** sign up / log in, PBKDF2 password hashes, JWT bearer tokens, every row scoped to an organisation.
 
-## Verify it yourself (System check page)
-
-Log in, then open **System check** in the sidebar. Every item is live from the running server:
-
-1. **Login and accounts**: who you are, token lifetime, how passwords are stored, and a view of the `users` table (admin only, never shows hashes).
-2. **Database and seeded data**: every table created by `app/db.py` with row counts and a "View rows" button. Demo rows come from `app/seed.py`.
-3. **POST / PUT / PATCH / DELETE**: "Run live CRUD test" creates a temporary asset, reads it, replaces it, edits one field (which raises an alert by rule), deletes it, and shows each real request, status code and result.
-4. **Live API requests**: what the server actually received from the browser (tick "Changes only" to hide GETs).
-5. **Gemma 4**: exact model identifier, endpoint, the code path, a "Run live Gemma 4 test" button (shows the prompt, the raw model reply, the model name the API reports, and latency) and the `ai_calls` history.
-
-## Gemma 4 proof
+## Where Gemma 4 actually runs
 
 | Question | Answer |
 |---|---|
-| Exact model | `gemma-4-26b-a4b-it` (set in `app/config.py` / `.env` as `GEMINI_MODEL`; `gemma-4-31b-it` also works) |
-| Where it is called | `app/ai.py` `_call_gemini()` posts to `https://generativelanguage.googleapis.com/v1beta/models/<model>:generateContent` |
-| What triggers it | **Alerts > Analyze with AI** (`POST /api/alerts/{id}/analyze`) and **AI Insights > Generate insights** (`POST /api/insights/generate`) |
-| What it contributes | A structured diagnosis (probable cause, failure mode, urgency, confidence, next checks, uncertainty) for the asset, shown on the alert and turned into insight cards |
-| What the app does without it | Falls back to `rule_based()` and says so in the UI: the card reads "Rule-based diagnosis" and the call is logged with `source = rules` and the reason |
-| Human control | Output is stored as *pending review*. A person must approve or reject it. The model cannot raise alerts, change severity, create work orders or touch equipment |
-| Output safety | Strict schema validation (`Diagnosis`), shown only as escaped text, asset names sanitised before they enter the prompt, 30 calls per user per hour |
-| Evidence | The `ai_calls` table and the System check page record model, API-reported `modelVersion`, latency and errors for every call |
-| Without a key | `GEMINI_API_KEY` empty means the server prints `Gemma 4 inference: DISABLED` at startup and every AI card is labelled as rule-based. It never pretends |
+| Exact model identifier | `gemma-4-26b-a4b-it` — the default `GEMINI_MODEL` in `app/config.py`; `gemma-4-31b-it` is the other hosted Gemma 4 size the API documents |
+| HTTP endpoint | `POST https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent` with the `x-goog-api-key` header |
+| Inference code | `app/ai.py`: `build_prompt()` → `_call_gemini()` → `_extract_json()` → `Diagnosis.model_validate()` |
+| Trigger in the product | **/demo → Run Gemma 4 investigation** → `POST /api/valves/{id}/reports` → `create_report()` in `app/api.py` → `ai.diagnose()` |
+| Contribution to the demo | The text of the report card: summary, 1–3 likely explanations with likelihood, recommended first action, next checks, data gaps, urgency and confidence. Saved as `pending` until a person accepts, rejects or asks for more data |
+| What it never does | Decide what is flagged or compute health/priority (`app/analytics.py` does that), raise or clear alerts, change severity, order work, or touch equipment |
+| Fallback | No key, timeout, HTTP error, non-JSON reply or schema mismatch → `rule_based()` answers, and the card is labelled **Rule-based fallback** with the reason (`no_api_key`, `HTTP 429: …`, `validation error`) |
+| Audit | Every call *and* every fallback is written to the `ai_calls` table with model, the API-reported `modelVersion`, latency and error; shown on `/demo` and served by `GET /api/system/ai-calls` |
 
-Using a Gemini-branded model name instead of a Gemma 4 id would make the System page show a red "Not a Gemma 4 model" chip.
+This is the hosted route in the MLH partner guidance — the Gemini API, not local inference — and a
+`gemini-*` model id is never substituted for the Gemma 4 diagnosis.
 
-## Run it
+## Run it (two processes, two terminals)
 
 ```bash
-bash run.sh                     # Linux / WSL / Mac: makes .venv, installs, copies .env, starts the server
-# or by hand:
-python -m venv .venv && source .venv/bin/activate    # Windows: .venv\\Scripts\\activate
+# terminal 1 — API
+python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env            # Windows: copy .env.example .env ; then add GEMINI_API_KEY
-uvicorn app.main:app --reload   # open http://localhost:8000  (Python 3.10+ required)
-python -m pytest                # backend tests
+cp .env.example .env                                    # set GEMINI_API_KEY=... (leave empty to see the labelled fallback)
+uvicorn app.main:app --reload --port 8000
+
+# terminal 2 — product
+npm install
+npm run dev                                             # http://localhost:3000
 ```
 
-**Always open `http://localhost:8000` from the running server.** Double-clicking an `index.html` file shows a page with no backend, no login and no data.
+Open **http://localhost:3000/demo**. The Vite dev server proxies `/api` to `127.0.0.1:8000`, so the
+browser only talks to its own origin.
 
-The database file (`nexora.db`) and 12 demo assets are created on first start.
-Set `SEED_DEMO_DATA=false` for an empty production database. Interactive API docs: `/docs`.
+## What the demo does, step by step
 
-## What the AI does, and what it does not
+1. `POST /api/demo/session` creates an isolated demo organisation and seeds the 20 simulated valves
+   from `app/seed.py`. No sign-up form, and it is not special-cased later.
+2. `GET /api/valves` returns the fleet with health, priority and findings computed by
+   `app/analytics.py`. Three valves are flagged: V-113 (urgent), V-107 (inspect soon), V-121 (verify sensor).
+3. **Run Gemma 4 investigation** posts `POST /api/valves/{id}/reports`. `build_evidence()` assembles the
+   telemetry and the rule findings, then `app/ai.py` sends the prompt and validates the reply.
+4. The report card shows the diagnosis plus a provenance chip — `gemma-4-26b-a4b-it · Gemini API`, or
+   `Rule-based fallback` — and the call log below lists model, `modelVersion`, latency and error.
+5. Accept / Needs more data / False positive posts `POST /api/reports/{id}/review` and is recorded with
+   the reviewer's name.
 
-**Task that benefits from AI.** Turning a handful of sensor numbers (vibration, temperature,
-trend, health score) into a short plain-language diagnosis: probable cause, urgency, and the
-next inspection steps. Reading across signals and wording a caveat is where a language model
-helps; picking a threshold is not.
+The demo's readings are simulated. The database, the anomaly rules, the HTTP request to Google and the
+stored audit rows are real.
 
-**What stays conventional (no model):** health scores, threshold alerts, de-duplication and
-auto-clearing of alerts, the 72-hour failure-risk forecast (least-squares trend + normal CDF),
-all CRUD, authentication, and which assets get diagnosed.
+## Verify
 
-**Why an open model.** Gemma 4 weights are open, so the same prompt can later run on the plant's
-own hardware if sensor data must not leave the site. This build uses the hosted Gemini API
-(`gemma-4-26b-a4b-it`, or `gemma-4-31b-it`); local inference is a swap of `_call_gemini` in
-`app/ai.py`.
+```bash
+python -m pytest        # 17 backend tests, including the demo session and the model-call path
+npx tsc --noEmit        # frontend types
+npm run build           # production build
+python tests/gemini.py  # with a key in .env: prints HTTP status, the reply and the modelVersion Google reports
+```
 
-**Human control.** The model never changes severity, opens alerts, creates work orders or
-touches equipment. Each diagnosis is saved as *pending review*; a person must press
-"Approve and draft work order" or "Reject" (`POST /api/alerts/{id}/analysis/review`).
-Generated insights start as *pending* too. Model output is validated against a strict schema,
-shown only as escaped text, and capped at 30 calls per user per hour.
+The test suite runs without a key, so it asserts the labelled fallback; `test_gemini_report_is_stored_when_model_answers`
+stubs `_call_gemini` to prove that a successful reply is stored with the model id.
 
-**Failure path.** No API key, a network error, a bad reply or a schema mismatch all fall back to
-the rule-based diagnosis, clearly labelled "Rule-based diagnosis" in the UI.
+## API
 
-**Data sent to the hosted API:** asset tag, asset type and numeric readings only. No names,
-emails or notes. Read the current Gemini API terms before use: unpaid services must not receive
-sensitive, confidential or personal information, and there are age and permitted-use rules.
-Do not send real plant data on the free tier unless you have checked you are allowed to.
-
-## API (all except auth need `Authorization: Bearer <token>`)
+All routes except `/api/health` and `/api/demo/*` need `Authorization: Bearer <token>`.
 
 | Resource | Methods |
 |---|---|
-| `/api/auth/signup`, `/login` | POST |
-| `/api/auth/me` | GET, PATCH |
-| `/api/assets`, `/api/assets/{id}` | GET, POST, PUT (replace), PATCH (partial), DELETE (admin) |
-| `/api/assets/{id}/readings` | GET, POST (updates health, status and alerts) |
-| `/api/assets/{id}/prediction` | GET |
-| `/api/alerts`, `/api/alerts/{id}` | GET, POST, PUT, PATCH, DELETE |
-| `/api/alerts/{id}/analyze`, `/analysis/review` | POST (AI diagnosis, human decision) |
-| `/api/insights`, `/api/insights/{id}`, `/generate` | GET, POST, PATCH, DELETE |
-| `/api/workflows`, `/api/workflows/{id}`, `/run` | GET, POST, PUT, PATCH, DELETE |
-| `/api/integrations`, `/api/integrations/{id}` | GET, POST, PUT, PATCH, DELETE |
-| `/api/settings` | GET, PUT, PATCH (admin) |
-| `/api/metrics/{mtbf\|oee\|energy}` | GET, PUT (admin) |
-| `/api/overview`, `/analytics/fleet`, `/activity`, `/reports/summary`, `/ai/status` | GET |
+| `/api/auth/signup`, `/api/auth/login`, `/api/auth/google`, `/api/auth/me` | POST, POST, POST, GET / PATCH |
+| `/api/demo/session` | POST — public, isolated demo org + 20 valves |
+| `/api/demo/ai-status` | GET — public, model id and endpoint; never the key |
+| `/api/valves`, `/api/valves/{id}` | GET, POST / GET, PATCH, DELETE (admin) |
+| `/api/valves/{id}/readings`, `/prediction` | GET, POST / GET |
+| `/api/valves/{id}/reports` | POST — AI investigation |
+| `/api/reports`, `/api/reports/{id}`, `/api/reports/{id}/review` | GET / GET / POST — human decision |
+| `/api/alerts`, `/api/alerts/{id}` | GET, POST / PATCH, DELETE |
+| `/api/settings` | GET, PATCH (admin) |
+| `/api/fleet/overview`, `/api/fleet/demo`, `/api/activity` | GET, POST, GET |
+| `/api/system/status`, `/tables/{name}`, `/requests`, `/ai-calls`, `/ai-selftest` | GET (ai-selftest: POST, admin) |
 
-Every screen re-fetches from these endpoints after a change, so the UI always shows what is in the database.
-Try it: on **Telemetry**, send a vibration reading above the alarm. The asset's health, status, an alert, the
-activity feed and the overview KPIs all update; send a normal reading and the alert clears itself.
+Interactive docs at `http://localhost:8000/docs`.
 
-## Deploy (PrimeCloud or any container host)
+## Deploy
+
+**API (container):**
 
 ```bash
-docker build -t nexora .
-docker run -p 8000:8000 -v nexora-data:/data \
-  -e SECRET_KEY=... -e GEMINI_API_KEY=... -e SEED_DEMO_DATA=false nexora
+docker build -t valveguard .
+docker run -p 8000:8000 -v valveguard-data:/data \
+  -e SECRET_KEY=... -e GEMINI_API_KEY=... valveguard
 ```
 
-On a platform that injects `PORT`, the container honours it. Put it behind HTTPS, set a strong
-`SECRET_KEY`, and keep the volume mounted so the SQLite file persists. For more than one instance,
-point `DATABASE_URL` at PostgreSQL (add the driver to `requirements.txt`). I could not test against
-PrimeCloud itself, so check their current deploy steps for ports, volumes and environment variables.
+Mount the volume so `/data/valveguard.db` persists. On a platform that injects `PORT`, the container
+honours it. For more than one instance, point `DATABASE_URL` at PostgreSQL and add the driver.
 
-## Known limits (be upfront about these in a demo)
+**Product:** `npm run build`, then serve the output. The `/api` proxy exists only in `vite dev`; in
+production set `VITE_API_BASE` to the API origin and add that origin to `CORS_ORIGINS`.
 
-- Seeded assets, alerts and insights are **demo data**. MTBF, OEE and energy are manual values
-  (Settings, admin) until connected to a plant data source.
-- Integrations are connection records only. Workflows record runs; they do not call Maximo, SAP or Slack.
-- Login throttling and the AI rate limit are in memory, so they reset on restart and are per instance.
-- Fonts and icons load from Google Fonts and cdnjs (Font Awesome), as in the original dashboard.
-- Tokens live in `localStorage`; fine for a demo, consider httpOnly cookies for production.
+## Known limits (worth saying in a demo)
+
+- Readings are simulated. MTBF/OEE/energy metrics are not implemented.
+- `/signup` and `/login` are still UI prototypes: they validate input but do not create accounts. The
+  real auth endpoints exist and are exercised by the demo session and the tests.
+- Every demo visit creates its own organisation; rows accumulate. Add pruning before public hosting.
+- Login throttling, the AI rate limit (30 calls/user/hour) and demo-session throttling are in memory,
+  so they reset on restart and are per instance.
+- Integrations, workflows and report export are not built.
+- Fonts and icons load from Google Fonts and cdnjs.
+- Model output is advisory only. It does not certify safety or authorise repairs.

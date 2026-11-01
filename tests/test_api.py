@@ -31,6 +31,39 @@ def by_tag(c, h):
     return {v["tag"]: v for v in c.get("/api/valves", headers=h).json()}
 
 
+def test_demo_session_runs_the_real_investigation_path():
+    """The page behind /demo: one call creates an isolated org with the fleet, then the ordinary
+    report endpoint runs. With no key the honest fallback answers; with a key the same endpoint
+    calls Gemma 4 (covered by test_gemini_report_is_stored_when_model_answers)."""
+    with client() as c:
+        r = c.post("/api/demo/session")
+        assert r.status_code == 201, r.text
+        body = r.json()
+        assert body["valves"] == 20 and body["user"]["role"] == "admin"
+        h = {"Authorization": "Bearer " + body["token"]}
+        valves = c.get("/api/valves", headers=h).json()
+        assert len(valves) == 20
+        assert {v["tag"] for v in valves if v["priority"] != "normal"} == {"V-107", "V-113", "V-121"}
+
+        v113 = next(v for v in valves if v["tag"] == "V-113")
+        rep = c.post(f"/api/valves/{v113['id']}/reports", headers=h).json()
+        assert rep["source"] == "rules" and rep["error"] == "no_api_key"
+        assert rep["analysis"]["recommended_first_action"] and rep["review"] == "pending"
+        assert c.get(f"/api/reports/{rep['id']}", headers=h).json()["valve_tag"] == "V-113"
+        assert c.get("/api/system/ai-calls", headers=h).json()[0]["valve_tag"] == "V-113"
+
+        status = c.get("/api/demo/ai-status").json()
+        assert status["configured"] is False and status["model"] == "gemma-4-26b-a4b-it"
+        assert status["endpoint"].endswith("/models/gemma-4-26b-a4b-it:generateContent")
+        assert "GEMINI_API_KEY" not in str(status)
+
+        # every visitor gets its own organisation: a second session cannot read the first report
+        other = c.post("/api/demo/session").json()
+        other_h = {"Authorization": "Bearer " + other["token"]}
+        assert c.get(f"/api/reports/{rep['id']}", headers=other_h).status_code == 404
+        assert len(c.get("/api/valves", headers=other_h).json()) == 20
+
+
 def test_auth_flow():
     with client() as c:
         assert c.get("/api/valves").status_code == 401

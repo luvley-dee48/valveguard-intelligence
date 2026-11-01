@@ -33,6 +33,7 @@ export function Nav() {
             <li key={l.label}><a href={l.href} className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">{l.label}</a></li>
           ))}
           <li><Link to="/docs" className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Docs</Link></li>
+          <li><Link to="/demo" className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>Live demo</Link></li>
           <li><a href={GITHUB_URL} target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground"><Github className="h-4 w-4" />GitHub</a></li>
         </ul>
         <div className="hidden items-center gap-2 lg:flex">
@@ -50,6 +51,7 @@ export function Nav() {
           <ul className="flex flex-col gap-1 p-6 font-display text-2xl">
             {links.map((l) => <li key={l.label}><a href={l.href} onClick={() => setOpen(false)} className="block py-2 hover:text-primary">{l.label}</a></li>)}
             <li><Link to="/docs" onClick={() => setOpen(false)} className="block py-2 hover:text-primary">Docs</Link></li>
+            <li><Link to="/demo" onClick={() => setOpen(false)} className="block py-2 hover:text-primary">Live demo</Link></li>
             <li><a href={GITHUB_URL} target="_blank" rel="noreferrer" className="block py-2 hover:text-primary">GitHub</a></li>
           </ul>
           <div className="mt-auto grid gap-3 p-6">

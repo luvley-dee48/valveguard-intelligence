@@ -12,4 +12,14 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    // The FastAPI backend (app/) is a separate process on port 8000. Proxying /api keeps every
+    // browser request same-origin, so the live demo works from localhost and from the sandbox
+    // preview host without CORS or exposing the API host to the browser.
+    server: {
+      proxy: {
+        "/api": { target: "http://127.0.0.1:8000", changeOrigin: true },
+      },
+    },
+  },
 });

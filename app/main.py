@@ -9,7 +9,7 @@ import jwt
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import ai, auth, system
+from . import ai, auth, demo, system
 from .api import router as api_router
 from .config import CORS_ORIGIN_REGEX, CORS_ORIGINS, GOOGLE_CLIENT_ID, SECRET_KEY
 from .db import init_db, iso, utcnow
@@ -72,5 +72,6 @@ def health():
 
 
 app.include_router(auth.router)
+app.include_router(demo.router)
 app.include_router(api_router)
 app.include_router(system.router)
