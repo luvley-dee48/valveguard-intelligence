@@ -35,11 +35,18 @@ uvicorn app.main:app --reload --port 8000
 
 # terminal 2 — product
 npm install
-npm run dev                                             # http://localhost:3000
+npm run dev                                             # http://localhost:8080
 ```
 
-Open **http://localhost:3000/demo**. The Vite dev server proxies `/api` to `127.0.0.1:8000`, so the
+Open **http://localhost:8080/demo** (use whatever port `npm run dev` prints if it differs — add
+`-- --port 3000` to change it). The Vite dev server proxies `/api` to `127.0.0.1:8000`, so the
 browser only talks to its own origin.
+
+Both terminals must be running. If the API is not up, the page loads but the valve list shows a
+connection error (`ECONNREFUSED 127.0.0.1:8000` in the Vite log) — start terminal 1.
+
+Leave `SECRET_KEY` empty to let the app generate `.secret_key` on first run; startup rejects
+placeholder values on purpose.
 
 ## What the demo does, step by step
 
